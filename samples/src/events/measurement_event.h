@@ -19,12 +19,11 @@
 extern "C" {
 #endif
 
+#define MESSAGE_SIZE 32
 struct measurement_event {
-	struct app_event_header header;
+    struct app_event_header header;
 
-	int8_t value1;
-	int16_t value2;
-	int32_t value3;
+    uint8_t bytes[MESSAGE_SIZE];
 };
 
 APP_EVENT_TYPE_DECLARE(measurement_event);
