@@ -19,7 +19,7 @@
 extern "C" {
 #endif
 
-#define MESSAGE_SIZE 32
+#define MESSAGE_SIZE 16
 struct measurement_event {
     struct app_event_header header;
 
