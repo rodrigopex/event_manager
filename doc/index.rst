@@ -82,7 +82,7 @@ To create a header file for the event type you want to define:
 
    .. code-block:: c
 
-	   #include <app_event_manager/app_event_manager.h>
+	   #include <app_event_manager.h>
 
 #. Define the new event type by creating a structure that contains an :c:struct:`app_event_header` named ``header`` as the first field.
 #. Optionally, add additional custom data fields to the structure.
@@ -92,7 +92,7 @@ The following code example shows a header file for the event type :c:struct:`sam
 
 .. code-block:: c
 
-   #include <app_event_manager/app_event_manager.h>
+   #include <app_event_manager.h>
 
    struct sample_event {
 	   struct app_event_header header;
@@ -111,7 +111,7 @@ For example, you can add variable sized data to the previously defined event by 
 
 .. code-block:: c
 
-   #include <app_event_manager/app_event_manager.h>
+   #include <app_event_manager.h>
 
    struct sample_event {
 	   struct app_event_header header;
@@ -372,8 +372,8 @@ API documentation
 *****************
 
 | Header file: :file:`include/app_event_manager.h`
-| Source files: :file:`subsys/app_event_manager/`
+| Source files: :file:`src/app_event_manager/`
 
 .. doxygengroup:: app_event_manager
-   :project: nrf
+   :project: 
    :members:
