@@ -32,16 +32,16 @@ Statistics (``stats.c``):
 
 Building and testing
 ********************
-.. |sample path| replace:: :file:`samples/app_event_manager`
+.. |sample path| replace:: :file:`samples`
 
 1.Using development board:
   Build and flash Event Manager as follows, changing nrf52840dk_nrf52840 for your board:
-  west build -b nrf52840dk_nrf52840 samples/subsys/event_manager
+  west build -b nrf52840dk_nrf52840 samples
   west flash
   Then connect to the kit with a terminal emulator (for example, PuTTY).
 #. Using qemu
   If you use qemu platform changing qemu_leon3 for your board:
-  west build -b quemu_leon3 samples/subsys/event_manager
+  west build -b quemu_leon3 samples
   west build -t run
 #. Observe that output similar to the following is logged on UART in case of development kit and in terminal in case of qemu::
 
