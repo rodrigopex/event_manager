@@ -9,8 +9,8 @@
 #include <stdint.h>
 #include <zephyr.h>
 #include "measurement_event.h"
-#define BYTES_TO_BE_SENT 256000LLU
-
+#define BYTES_TO_BE_SENT (256 * 1024LLU)
+#define ONE_TO 16LLU
 uint64_t count;
 
 
@@ -43,6 +43,7 @@ APP_EVENT_LISTENER(consumer7, app_event_handler);
 APP_EVENT_SUBSCRIBE(consumer7, measurement_event);
 APP_EVENT_LISTENER(consumer8, app_event_handler);
 APP_EVENT_SUBSCRIBE(consumer8, measurement_event);
+#if (ONE_TO == 16LLU)
 APP_EVENT_LISTENER(consumer9, app_event_handler);
 APP_EVENT_SUBSCRIBE(consumer9, measurement_event);
 APP_EVENT_LISTENER(consumer10, app_event_handler);
@@ -59,7 +60,7 @@ APP_EVENT_LISTENER(consumer15, app_event_handler);
 APP_EVENT_SUBSCRIBE(consumer15, measurement_event);
 APP_EVENT_LISTENER(consumer16, app_event_handler);
 APP_EVENT_SUBSCRIBE(consumer16, measurement_event);
-
+#endif
 
 void main(void)
 {
@@ -79,7 +80,7 @@ void producer_thread(void)
     }
     uint64_t current_message_size = MESSAGE_SIZE;
     uint32_t start                = k_uptime_get_32();
-    for (uint64_t internal_count = BYTES_TO_BE_SENT / 16LLU; internal_count > 0;
+    for (uint64_t internal_count = BYTES_TO_BE_SENT / ONE_TO; internal_count > 0;
          internal_count -= current_message_size) {
         struct measurement_event *event = new_measurement_event();
         memcpy(event->bytes, msg_data, MESSAGE_SIZE);
