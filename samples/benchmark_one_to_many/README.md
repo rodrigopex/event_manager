@@ -9,17 +9,18 @@ Notice we have the following parameters:
 * **MSG_SIZE**: the size of the message to be transferred;
 * **ONE_TO**: number of consumers to send;
 * **ASYNC**: if the execution must be asynchronous or synchronous. Use 1 to async e 0 to sync;
+* **DALLOC**: if the event memory allocation must be static or dynamic. Use 1 to dynamic e 0 to static;
 * **BOARD**: the board name you want to use.
 
 The result would be something like:
 ```
 *** Booting Zephyr OS build zephyr-v3.0.0  ***
- Benchmark 1 to 8: SYNC transmission and message size 32
+ Benchmark 1 to 1: SYNC transmission and message size 256
  - Bytes sent = 262144, received = 262144 
- - Average data rate: 560136.75B/s
- - Duration: 468ms
+ - Average data rate: 349525.33B/s
+ - Duration: 750ms
 
-@468
+@750
 ```
 
 ### Running the benchmark automatically

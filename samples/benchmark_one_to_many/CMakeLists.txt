@@ -16,7 +16,7 @@ zephyr_compile_definitions(
 zephyr_library_include_directories(src/events)
 
 target_compile_definitions(app PRIVATE   
-    -DBM_MESSAGE_SIZE=${MSG_SIZE}U -DBM_ONE_TO=${ONE_TO}LLU -DBM_ASYNC=${ASYNC}
+    -DBM_MESSAGE_SIZE=${MSG_SIZE}U -DBM_ONE_TO=${ONE_TO}LLU -DBM_ASYNC=${ASYNC} -DBM_DYNAMIC_ALLOCATION=${DALLOC}
     )   
 
 # Application sources

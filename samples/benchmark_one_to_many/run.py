@@ -29,15 +29,15 @@ def sh(args, timeout=None, check_result=True, cd=False):
     return res
 
 
-def exec_benchmark_for(one_to, msg_size, async_):
-    sh(f"make benchmark MSG_SIZE={msg_size} ONE_TO={one_to} ASYNC={async_}")
+def exec_benchmark_for(one_to, msg_size, async_, dalloc):
+    sh(f"make benchmark MSG_SIZE={msg_size} ONE_TO={one_to} ASYNC={async_} DALLOC={dalloc}")
     duration = 0
     duration += filter_at(ser, b'@')
     for i in range(2):
         sh("west flash")
         duration += filter_at(ser, b'@')
     results.append(
-        f"{'ASYNC' if async_ else 'SYNC'}, {one_to}, {msg_size}, {duration/3}\n")
+        f"{'ASYNC' if async_ else 'SYNC'}, {'DYN' if dalloc else 'STA'},{one_to}, {msg_size}, {duration/3}\n")
 
 
 def cleaning_workdir():
@@ -50,15 +50,17 @@ if __name__ == "__main__":
     try:
         for consumers in [1]:
             for sync in [0]:
-                for msg_size in [1, 2, 4, 8, 16, 32, 64, 128, 256]:
-                    exec_benchmark_for(consumers, msg_size, sync)
+                for dalloc in [0, 1]:
+                    for msg_size in [1, 2, 4, 8, 16, 32, 64, 128, 256]:
+                        exec_benchmark_for(consumers, msg_size, sync, dalloc)
             with open(os.path.join('benchmark.csv'), 'a') as f:
                 f.writelines(results)
                 results = []
         for consumers in [2, 4, 8]:
             for sync in [0]:
-                for msg_size in [32, 64, 128, 256]:
-                    exec_benchmark_for(consumers, msg_size, sync)
+                for dalloc in [0, 1]:
+                    for msg_size in [1, 2, 4, 8, 16, 32, 64, 128, 256]:
+                        exec_benchmark_for(consumers, msg_size, sync, dalloc)
             with open(os.path.join('benchmark.csv'), 'a') as f:
                 f.writelines(results)
                 results = []

@@ -13,6 +13,20 @@
 
 uint64_t count = 0;
 
+#if (BM_DYNAMIC_ALLOCATION == 0)
+struct measurement_event static_event_holder;
+
+void *app_event_manager_alloc(size_t size)
+{
+    return &static_event_holder;
+}
+
+void app_event_manager_free(void *addr)
+{
+    return;
+}
+#endif
+
 static bool s_cb(const struct app_event_header *aeh)
 {
     if (is_measurement_event(aeh)) {
