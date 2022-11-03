@@ -8,28 +8,21 @@ Suite Teardown      Terminate All Processes    kill=True
 
 
 *** Variables ***
-${csv_file}     event_manager_benchmark_256kb.csv
-
+${csv_file}      event_manager_benchmark_256kb.csv
+${board}         hifive1_revb
+${serial_port}   /dev/ttyACM0
 
 *** Tasks ***
 Clear Old CSV File
     Empty Csv File    ${csv_file}
 
- Event Manager Benchmark
-    FOR    ${alloc}    IN    0    1
-        FOR    ${consumers}    IN    1    2    4    8
-            FOR    ${msg_size}    IN    1    2    4    8    16    32    64    128    256
-                Benchmark Report For
-                ...    message_size=${msg_size}
-                ...    one_to=${consumers}
-                ...    asynchronous=0
-                ...    dynamic_alloc=${alloc}
-            END
+Event Manager Benchmark
+    FOR    ${consumers}    IN    1    2    4    8
+        FOR    ${msg_size}    IN    1    2    4    8    16    32    64    128    256
+            Benchmark Report For    message_size=${msg_size}    one_to=${consumers}
         END
     END
 
-#Test 1
-#    Benchmark Report For    message_size=256    one_to=1    asynchronous=1    dynamic_alloc=1
 
 
 *** Keywords ***
@@ -44,15 +37,13 @@ Run Memory Report
 
 Measure Results
     ${total}    Set Variable    0
-    Add Port    /dev/ttyACM0    timeout=600    baudrate=115200
+    Add Port    ${serial_port}    timeout=120    baudrate=115200
     Set Encoding    ascii
     FOR    ${count}    IN RANGE    3
         ${result}    Run Process    west flash    shell=True
         Should Be Equal As Integers    ${result.rc}    0
         ${val}    Read Until    expected=@    encoding=ascii
-        Log To Console    ${val}
         ${val}    Read Until    encoding=ascii
-        Log To Console    ${val}
         ${val}    Strip String    ${val}
         ${val}    Convert To Integer    ${val}
         ${total}    Evaluate    ${total}+${val}
@@ -62,36 +53,21 @@ Measure Results
     [Teardown]    Delete All Ports
 
 Benchmark
-    [Arguments]    ${message_size}=256    ${one_to}=1    ${asynchronous}=0    ${dynamic_alloc}=0
+    [Arguments]    ${message_size}=256    ${one_to}=1
     ${result}    Run Process
-    ...    make rebuild MSG_SIZE\=${message_size} ONE_TO\=${one_to} ASYNC\=${asynchronous} DALLOC\=${dynamic_alloc}
+    ...    west build -b ${board} -p always -- -DZEPHYR_EXTRA_MODULES\=../event_manager/ -DCONFIG_BM_MESSAGE_SIZE\=${message_size} -DCONFIG_BM_ONE_TO\=${one_to}
     ...    shell=True
     Should Be Equal As Integers    ${result.rc}    0
     ${duration}    Measure Results
     RETURN    ${duration}
 
 Benchmark Report For
-    [Arguments]    ${message_size}=256    ${one_to}=1    ${asynchronous}=0    ${dynamic_alloc}=0
-    ${duration}    Benchmark
-    ...    message_size=${message_size}
-    ...    one_to=${one_to}
-    ...    asynchronous=${asynchronous}
-    ...    dynamic_alloc=${dynamic_alloc}
+    [Arguments]    ${message_size}=256    ${one_to}=1    ${asynchronous}=n
+    ${duration}    Benchmark    message_size=${message_size}    one_to=${one_to}
     ${ram_amount}    Run Memory Report    ram
     ${rom_amount}    Run Memory Report    rom
-    IF    ${asynchronous}
-        ${async_str}    Set Variable    ASYNC
-    ELSE
-        ${async_str}    Set Variable    SYNC
-    END
-
-    IF    ${dynamic_alloc}
-        ${alloc_str}    Set Variable    DYN
-    ELSE
-        ${alloc_str}    Set Variable    STA
-    END
+    ${async_str}    Set Variable    SYNC
     @{results}    Create List
-    ...    ${alloc_str}
     ...    ${async_str}
     ...    ${one_to}
     ...    ${message_size}
