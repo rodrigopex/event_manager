@@ -5,11 +5,11 @@
  */
 
 #include <stdio.h>
-#include <zephyr.h>
-#include <spinlock.h>
-#include <sys/slist.h>
+#include <zephyr/kernel.h>
+#include <zephyr/spinlock.h>
+#include <zephyr/sys/slist.h>
 #include <app_event_manager.h>
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 
 #if defined(CONFIG_REBOOT)
 #include <sys/reboot.h>

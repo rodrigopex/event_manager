@@ -12,10 +12,10 @@
 #ifndef ZEPHYR_INCLUDE_APP_EVENT_MANAGER_EVENT_MANAGER_PRIV_H_
 #define ZEPHYR_INCLUDE_APP_EVENT_MANAGER_EVENT_MANAGER_PRIV_H_
 
-#include <zephyr.h>
+#include <zephyr/kernel.h>
 #include <zephyr/types.h>
-#include <sys/__assert.h>
-#include <logging/log.h>
+#include <zephyr/sys/__assert.h>
+#include <zephyr/logging/log.h>
 
 #ifdef __cplusplus
 extern "C" {
