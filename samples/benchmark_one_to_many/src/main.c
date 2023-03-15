@@ -11,28 +11,25 @@
 #include "measurement_event.h"
 #define BYTES_TO_BE_SENT (256 * 1024LLU)
 
-uint64_t count = 0;
+LOG_MODULE_DECLARE(app_event_manager, CONFIG_APP_EVENT_MANAGER_LOG_LEVEL);
 
-#if (BM_DYNAMIC_ALLOCATION == 0)
-struct measurement_event static_event_holder;
-
-void *app_event_manager_alloc(size_t size)
-{
-    return &static_event_holder;
-}
-
-void app_event_manager_free(void *addr)
-{
-    return;
-}
+#if defined(CONFIG_ARCH_POSIX)
+#include "native_rtc.h"
+#define GET_ARCH_TIME_NS() (native_rtc_gettime_us(RTC_CLOCK_PSEUDOHOSTREALTIME) * NSEC_PER_USEC)
+#else
+#define GET_ARCH_TIME_NS() (k_cyc_to_ns_near64(sys_clock_cycle_get_32()))
 #endif
+
+#define PRODUCER_STACK_SIZE (CONFIG_MAIN_STACK_SIZE + CONFIG_BM_MESSAGE_SIZE)
+
+long int count = 0;
 
 static bool s_cb(const struct app_event_header *aeh)
 {
     if (is_measurement_event(aeh)) {
         struct measurement_event *me = cast_measurement_event(aeh);
         (void) me;
-        count += CONFIG_BM_MESSAGE_SIZE;
+        atomic_add(&count, CONFIG_BM_MESSAGE_SIZE);
     } else {
         printk("Wrong event came!");
         k_oops();
@@ -97,24 +94,30 @@ void producer_thread(void)
     for (uint64_t i = (CONFIG_BM_MESSAGE_SIZE - 1); i > 0; --i) {
         msg_to_be_sent[i] = i;
     }
-    uint32_t start = k_uptime_get_32();
+    uint64_t start_ns = GET_ARCH_TIME_NS();
     for (uint64_t internal_count = BYTES_TO_BE_SENT / CONFIG_BM_ONE_TO; internal_count > 0;
          internal_count -= CONFIG_BM_MESSAGE_SIZE) {
         struct measurement_event *event = new_measurement_event();
         memcpy(event->bytes, msg_to_be_sent, CONFIG_BM_MESSAGE_SIZE);
         APP_EVENT_SUBMIT(event);
     }
-    uint32_t duration = (k_uptime_get_32() - start);
+
+    uint64_t end_ns = GET_ARCH_TIME_NS();
+
+    uint64_t duration = end_ns - start_ns;
     if (duration == 0) {
-        printk("Duration error!\n");
+        LOG_ERR("Something wrong. Duration is zero!\n");
         k_oops();
     }
-    uint64_t i = (BYTES_TO_BE_SENT * 1000) / duration;
-    uint64_t f = ((BYTES_TO_BE_SENT * 100000) / duration) % 100;
-    printk(" - Bytes sent = %lld, received = %llu \n - Average data rate: "
-           "%llu.%lluB/s\n - Duration: %ums\n",
-           BYTES_TO_BE_SENT, count, i, f, duration);
-    printk("\n@%u\n", duration);
+    uint64_t i = ((BYTES_TO_BE_SENT * NSEC_PER_SEC) / MB(1)) / duration;
+	uint64_t f = ((BYTES_TO_BE_SENT * NSEC_PER_SEC * 100) / MB(1) / duration) % 100;
+
+	LOG_INF("Bytes sent = %lld, received = %lu", BYTES_TO_BE_SENT, atomic_get(&count));
+	LOG_INF("Average data rate: %llu.%lluMB/s", i, f);
+	LOG_INF("Duration: %llu.%llus", duration / NSEC_PER_USEC, duration % NSEC_PER_USEC);
+
+	printk("\n@%llu\n", duration);
 }
 
-K_THREAD_DEFINE(producer_thread_id, 1024, producer_thread, NULL, NULL, NULL, 5, 0, 10);
+K_THREAD_DEFINE(producer_thread_id, PRODUCER_STACK_SIZE, producer_thread,
+NULL, NULL, NULL, 5, 0, 0);
